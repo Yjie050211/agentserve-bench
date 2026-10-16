@@ -1,0 +1,194 @@
+{
+  "schema_version": "1.0",
+  "units": "milliseconds",
+  "description": "Client-observed metrics only. Adapters may map internal field names; these are shared semantic cases.",
+  "cases": [
+    {
+      "name": "plain_text",
+      "sent_at_ms": 100,
+      "events": [
+        {
+          "at_ms": 110,
+          "kind": "metadata"
+        },
+        {
+          "at_ms": 130,
+          "kind": "text",
+          "text": "a"
+        },
+        {
+          "at_ms": 190,
+          "kind": "text",
+          "text": "b"
+        },
+        {
+          "at_ms": 200,
+          "kind": "usage",
+          "completion_tokens": 4,
+          "reasoning_tokens": 0
+        },
+        {
+          "at_ms": 210,
+          "kind": "done"
+        }
+      ],
+      "expected": {
+        "text_ttft_ms": 30,
+        "text_tpot_proxy_ms": 20,
+        "e2e_ms": 110
+      }
+    },
+    {
+      "name": "single_token",
+      "sent_at_ms": 100,
+      "events": [
+        {
+          "at_ms": 120,
+          "kind": "text",
+          "text": "a"
+        },
+        {
+          "at_ms": 125,
+          "kind": "usage",
+          "completion_tokens": 1,
+          "reasoning_tokens": 0
+        },
+        {
+          "at_ms": 130,
+          "kind": "done"
+        }
+      ],
+      "expected": {
+        "text_ttft_ms": 20,
+        "text_tpot_proxy_ms": null,
+        "e2e_ms": 30
+      }
+    },
+    {
+      "name": "tool_only",
+      "sent_at_ms": 100,
+      "events": [
+        {
+          "at_ms": 110,
+          "kind": "metadata"
+        },
+        {
+          "at_ms": 120,
+          "kind": "tool_arguments",
+          "text": "{}"
+        },
+        {
+          "at_ms": 125,
+          "kind": "usage",
+          "completion_tokens": 2,
+          "reasoning_tokens": 0
+        },
+        {
+          "at_ms": 130,
+          "kind": "done"
+        }
+      ],
+      "expected": {
+        "text_ttft_ms": null,
+        "text_tpot_proxy_ms": null,
+        "e2e_ms": 30
+      }
+    },
+    {
+      "name": "reasoning_and_text",
+      "sent_at_ms": 100,
+      "events": [
+        {
+          "at_ms": 110,
+          "kind": "reasoning",
+          "text": "think"
+        },
+        {
+          "at_ms": 130,
+          "kind": "text",
+          "text": "answer"
+        },
+        {
+          "at_ms": 135,
+          "kind": "usage",
+          "completion_tokens": 8,
+          "reasoning_tokens": 4
+        },
+        {
+          "at_ms": 140,
+          "kind": "done"
+        }
+      ],
+      "expected": {
+        "text_ttft_ms": 30,
+        "text_tpot_proxy_ms": null,
+        "e2e_ms": 40
+      }
+    },
+    {
+      "name": "usage_missing",
+      "sent_at_ms": 100,
+      "events": [
+        {
+          "at_ms": 120,
+          "kind": "text",
+          "text": "a"
+        },
+        {
+          "at_ms": 140,
+          "kind": "text",
+          "text": "b"
+        },
+        {
+          "at_ms": 150,
+          "kind": "done"
+        }
+      ],
+      "expected": {
+        "text_ttft_ms": 20,
+        "text_tpot_proxy_ms": null,
+        "e2e_ms": 50
+      }
+    },
+    {
+      "name": "empty_blocks",
+      "sent_at_ms": 100,
+      "events": [
+        {
+          "at_ms": 110,
+          "kind": "text",
+          "text": ""
+        },
+        {
+          "at_ms": 120,
+          "kind": "metadata"
+        },
+        {
+          "at_ms": 130,
+          "kind": "text",
+          "text": "a"
+        },
+        {
+          "at_ms": 150,
+          "kind": "text",
+          "text": "b"
+        },
+        {
+          "at_ms": 155,
+          "kind": "usage",
+          "completion_tokens": 3,
+          "reasoning_tokens": 0
+        },
+        {
+          "at_ms": 160,
+          "kind": "done"
+        }
+      ],
+      "expected": {
+        "text_ttft_ms": 30,
+        "text_tpot_proxy_ms": 10,
+        "e2e_ms": 60
+      }
+    }
+  ]
+}

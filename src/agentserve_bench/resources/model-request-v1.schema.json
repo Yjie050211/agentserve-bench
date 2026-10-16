@@ -1,0 +1,203 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Yjie050211/agent-harness-lab/schemas/model-request-v1.schema.json",
+  "title": "Agent model request export v1",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "source_run_id",
+    "task_id",
+    "step_id",
+    "logical_call_id",
+    "source_attempt_no",
+    "request_id",
+    "relative_start_ms",
+    "request_body",
+    "body_sha256",
+    "outcome",
+    "usage"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "source_run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "task_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "step_id": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "logical_call_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_attempt_no": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "request_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "relative_start_ms": {
+      "type": "number",
+      "minimum": 0
+    },
+    "request_body": {
+      "type": "object",
+      "required": [
+        "model",
+        "messages"
+      ],
+      "properties": {
+        "model": {
+          "type": "string",
+          "minLength": 1
+        },
+        "messages": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "role"
+            ],
+            "properties": {
+              "role": {
+                "enum": [
+                  "system",
+                  "developer",
+                  "user",
+                  "assistant",
+                  "tool"
+                ]
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        "n": {
+          "const": 1
+        },
+        "stream": {
+          "type": "boolean"
+        },
+        "tools": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "body_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "wire_body_artifact": {
+      "type": "string",
+      "minLength": 1
+    },
+    "wire_body_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "model_mode": {
+      "enum": [
+        "fake",
+        "real"
+      ]
+    },
+    "outcome": {
+      "type": "object",
+      "required": [
+        "status"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "succeeded",
+            "failed",
+            "timeout",
+            "cancelled",
+            "unknown"
+          ]
+        },
+        "error": {
+          "type": [
+            "string",
+            "object",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    "usage": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "prompt_tokens": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "completion_tokens": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "total_tokens": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "dependentRequired": {
+    "wire_body_artifact": [
+      "wire_body_sha256"
+    ],
+    "wire_body_sha256": [
+      "wire_body_artifact"
+    ]
+  },
+  "allOf": [
+    {
+      "if": {
+        "required": [
+          "model_mode"
+        ],
+        "properties": {
+          "model_mode": {
+            "const": "real"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "wire_body_artifact",
+          "wire_body_sha256"
+        ]
+      }
+    }
+  ],
+  "additionalProperties": true
+}

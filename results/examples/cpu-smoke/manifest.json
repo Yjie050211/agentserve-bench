@@ -1,0 +1,41 @@
+{
+  "schema_version": "1.0",
+  "experiment_run_id": "43882ef8-7854-40f9-b822-cd2eda7a036a",
+  "created_at_utc": "2026-10-16T03:29:12.350858+00:00",
+  "execution_mode": "fixture",
+  "workload_origin": "synthetic",
+  "source_trace_sha256": "3351f104b0bd2f58ab35e32bfaa18b098d2a2dec766900c639b51e70aded46eb",
+  "concurrency": 2,
+  "replay_mode": "closed_loop_frozen_trace",
+  "body_mode": "preserve",
+  "source_attempts": 4,
+  "selected_calls": 4,
+  "effective_request_set": [
+    {
+      "request_id": "synthetic-0-0",
+      "effective_body_sha256": "06e0dd9419a8e2ceee48abc89f9268979707d35c2f9eddc7783aeeb779f8e4fc"
+    },
+    {
+      "request_id": "synthetic-0-1",
+      "effective_body_sha256": "f125cf8b651ba87828fd2813df6053bf85b05158e8b171779680c9d92174cb16"
+    },
+    {
+      "request_id": "synthetic-1-0",
+      "effective_body_sha256": "06e0dd9419a8e2ceee48abc89f9268979707d35c2f9eddc7783aeeb779f8e4fc"
+    },
+    {
+      "request_id": "synthetic-1-1",
+      "effective_body_sha256": "f125cf8b651ba87828fd2813df6053bf85b05158e8b171779680c9d92174cb16"
+    }
+  ],
+  "cache_state": "not_verified",
+  "cache_hit_rate": null,
+  "server_drain_confirmed": true,
+  "metadata": {
+    "git_commit": null,
+    "provenance_note": "Initial uncommitted build: git rev-parse returned nonzero; no commit exists. Corrected metadata only.",
+    "lock_sha256": "c8cd2d58314cfb9b3d38a39462e3bff495af76469ce9a4bfc73b65c852e7372d",
+    "python": "3.11.15 (main, Jun 11 2026, 04:59:07) [MSC v.1944 64 bit (AMD64)]",
+    "platform": "Windows-10-10.0.26300-SP0"
+  }
+}

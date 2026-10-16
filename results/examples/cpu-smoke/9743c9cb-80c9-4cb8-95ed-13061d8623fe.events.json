@@ -1,0 +1,59 @@
+{
+  "raw": [
+    {
+      "at_ms": 10,
+      "kind": "metadata",
+      "fixture": true
+    },
+    {
+      "at_ms": 30,
+      "kind": "text",
+      "text": "fixture ",
+      "fixture": true
+    },
+    {
+      "at_ms": 90,
+      "kind": "text",
+      "text": "answer",
+      "fixture": true
+    },
+    {
+      "at_ms": 100,
+      "kind": "usage",
+      "completion_tokens": 4,
+      "reasoning_tokens": 0,
+      "fixture": true
+    },
+    {
+      "at_ms": 110,
+      "kind": "done",
+      "fixture": true
+    }
+  ],
+  "typed": [
+    {
+      "at_ms": 10,
+      "kind": "metadata"
+    },
+    {
+      "at_ms": 30,
+      "kind": "text",
+      "text": "fixture "
+    },
+    {
+      "at_ms": 90,
+      "kind": "text",
+      "text": "answer"
+    },
+    {
+      "at_ms": 100,
+      "kind": "usage",
+      "completion_tokens": 4,
+      "reasoning_tokens": 0
+    },
+    {
+      "at_ms": 110,
+      "kind": "done"
+    }
+  ]
+}

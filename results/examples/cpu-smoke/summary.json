@@ -1,0 +1,23 @@
+{
+  "experiment_run_id": "43882ef8-7854-40f9-b822-cd2eda7a036a",
+  "execution_mode": "fixture",
+  "workload_origin": "synthetic",
+  "selected": 4,
+  "sent": 4,
+  "counts": {
+    "succeeded": 4
+  },
+  "failure_rate": 0.0,
+  "measurement_window_s": 0.0057369000005564885,
+  "successful_requests_per_s": null,
+  "text_ttft_mean_ms": 30.0,
+  "text_ttft_samples": 4,
+  "request_set_complete": true,
+  "request_set_successful": true,
+  "cache_comparison_eligible": false,
+  "cache_state": "not_verified",
+  "cache_hit_rate": null,
+  "real_gpu_validated": false,
+  "server_drain_confirmed": true,
+  "interpretation": "CPU fixture protocol validation only"
+}

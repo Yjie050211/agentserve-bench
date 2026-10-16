@@ -1,0 +1,38 @@
+[build-system]
+requires = ["hatchling>=1.27,<2", "editables>=0.5,<1"]
+build-backend = "hatchling.build"
+
+[project]
+name = "agentserve-bench"
+version = "0.1.0"
+description = "Reproducible agent-workload replay and prefix-cache benchmarking for vLLM."
+readme = "README.md"
+requires-python = ">=3.11,<3.14"
+license = "MIT"
+authors = [{ name = "Lou Youjie" }]
+dependencies = ["httpx>=0.28,<0.29", "jsonschema>=4.23,<5", "PyYAML>=6.0,<7", "editables>=0.5,<1"]
+
+[project.scripts]
+agentserve = "agentserve_bench.cli:main"
+
+[dependency-groups]
+dev = ["pytest>=8.3,<10", "pytest-asyncio>=0.25,<2", "ruff>=0.11,<1"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/agentserve_bench"]
+
+[tool.hatch.build]
+dev-mode-exact = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+markers = ["gpu: requires an explicitly provisioned real inference server"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "ASYNC"]
+ignore = ["ASYNC240"] # Small append-only artifact writes are intentionally synchronous.

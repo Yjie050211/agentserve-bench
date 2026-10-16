@@ -1,0 +1,5 @@
+execution_mode: fixture
+sessions: 2
+steps: 2
+concurrency: 2
+workload_origin: synthetic

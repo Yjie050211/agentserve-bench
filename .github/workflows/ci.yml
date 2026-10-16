@@ -1,0 +1,25 @@
+name: CPU verification
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  cpu:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: '0.11.25'
+          python-version: '3.11'
+          enable-cache: true
+      - run: uv sync --frozen
+      - run: uv run --frozen ruff check .
+      - run: uv run --frozen ruff format --check .
+      - run: uv run --frozen pytest
+      - run: uv build
+      - run: uv run --frozen agentserve synthetic --output results/ci-trace
+      - run: uv run --frozen agentserve replay results/ci-trace/model_requests.jsonl --output results/ci-run --concurrency 2
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cpu-fixture-evidence
+          path: results/ci-run/

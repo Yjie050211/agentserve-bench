@@ -1,0 +1,10 @@
+status: plan_only_not_measured
+backend: vllm
+expected_version: null # Must be pinned against the actually installed engine.
+repetitions: 3
+concurrency: [1, 2]
+automatic_prefix_cache: [false, true]
+initial_condition: [batch_start_cold, fixed_prefix_primed]
+warm_control_when_apc_off: true
+cache_reset_verified: false
+real_gpu_validated: false
