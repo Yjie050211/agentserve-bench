@@ -1,0 +1,4 @@
+* text=auto eol=lf
+# Wire-body artifacts are byte-hashed and must never be newline-normalized.
+**/artifacts/*.json -text
+**/bodies/*.json -text
