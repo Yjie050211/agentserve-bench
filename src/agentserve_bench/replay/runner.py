@@ -116,39 +116,45 @@ async def replay(
     semaphore = asyncio.Semaphore(concurrency)
     run_start = time.perf_counter()
 
+    # Prepare identities and immutable body artifacts for every selected request before
+    # any awaits. Global cancellation can then account for sessions not yet admitted.
+    common_by_id: dict[str, dict[str, Any]] = {}
+    for source in trace.selected:
+        record = source.record
+        wire, body, changes = prepared[source.request_id]
+        attempt_id = str(uuid.uuid4())
+        stem = f"bodies/{attempt_id}"
+        (output / (stem + ".source.json")).write_bytes(source.wire_body)
+        (output / (stem + ".effective.json")).write_bytes(wire)
+        common_by_id[source.request_id] = {
+            "experiment_run_id": experiment_id,
+            "attempt_id": attempt_id,
+            "source_request_id": source.request_id,
+            "source_run_id": record["source_run_id"],
+            "task_id": record["task_id"],
+            "step_id": record["step_id"],
+            "logical_call_id": record["logical_call_id"],
+            "source_attempt_no": record["source_attempt_no"],
+            "source_body_sha256": sha256(source.wire_body) if source.source_wire_verified else None,
+            "source_body_artifact": stem + ".source.json",
+            "source_body_encoding": "verified_wire"
+            if source.source_wire_verified
+            else "canonical_reconstruction",
+            "effective_body_sha256": sha256(wire),
+            "effective_body_artifact": stem + ".effective.json",
+            "effective_request_body": body,
+            "transformations": changes,
+            "execution_mode": backend.execution_mode,
+            "workload_origin": workload_origin,
+        }
+
     async def session_run(session: list[SourceRequest]) -> None:
         async with semaphore:
             failed_id: str | None = None
             for source in session:
-                record = source.record
-                wire, body, changes = prepared[source.request_id]
-                attempt_id = str(uuid.uuid4())
-                stem = f"bodies/{attempt_id}"
-                (output / (stem + ".source.json")).write_bytes(source.wire_body)
-                (output / (stem + ".effective.json")).write_bytes(wire)
-                common = {
-                    "experiment_run_id": experiment_id,
-                    "attempt_id": attempt_id,
-                    "source_request_id": source.request_id,
-                    "source_run_id": record["source_run_id"],
-                    "task_id": record["task_id"],
-                    "step_id": record["step_id"],
-                    "logical_call_id": record["logical_call_id"],
-                    "source_attempt_no": record["source_attempt_no"],
-                    "source_body_sha256": sha256(source.wire_body)
-                    if source.source_wire_verified
-                    else None,
-                    "source_body_artifact": stem + ".source.json",
-                    "source_body_encoding": "verified_wire"
-                    if source.source_wire_verified
-                    else "canonical_reconstruction",
-                    "effective_body_sha256": sha256(wire),
-                    "effective_body_artifact": stem + ".effective.json",
-                    "effective_request_body": body,
-                    "transformations": changes,
-                    "execution_mode": backend.execution_mode,
-                    "workload_origin": workload_origin,
-                }
+                wire = prepared[source.request_id][0]
+                common = common_by_id[source.request_id]
+                attempt_id = common["attempt_id"]
                 if failed_id:
                     result = {
                         **common,
@@ -208,7 +214,39 @@ async def replay(
                         json.dumps({"event": "terminal", **result}, ensure_ascii=False) + "\n"
                     )
 
-    await asyncio.gather(*(session_run(items) for items in sessions.values()))
+    tasks = [asyncio.create_task(session_run(items)) for items in sessions.values()]
+    interrupted = False
+    try:
+        await asyncio.gather(*tasks)
+    except asyncio.CancelledError:
+        interrupted = True
+        for task in tasks:
+            if not task.done():
+                task.cancel()
+        # Active backend calls get a chance to persist cancellation observations;
+        # semaphore waiters have no sent call and are accounted for below.
+        await asyncio.gather(*tasks, return_exceptions=True)
+    finally:
+        if interrupted:
+            completed = {item["source_request_id"] for item in results}
+            with (output / "events.jsonl").open("a", encoding="utf-8") as stream:
+                for source in trace.selected:
+                    if source.request_id in completed:
+                        continue
+                    result = {
+                        **common_by_id[source.request_id],
+                        "status": "not_sent",
+                        "metrics": {},
+                        "error": "run_cancelled_before_send",
+                        "sent_at_ms": None,
+                        "terminal_at_ms": None,
+                    }
+                    results.append(result)
+                    stream.write(
+                        json.dumps({"event": "terminal", **result}, ensure_ascii=False) + "\n"
+                    )
+        manifest["run_status"] = "cancelled" if interrupted else "completed"
+        manifest["interrupted"] = interrupted
     order = {source.request_id: i for i, source in enumerate(trace.selected)}
     results.sort(key=lambda item: order[item["source_request_id"]])
     (output / "results.jsonl").write_text(
@@ -216,8 +254,12 @@ async def replay(
         encoding="utf-8",
     )
     summary = summarize(results, manifest)
+    manifest["server_drain_confirmed"] = summary["server_drain_confirmed"]
+    (output / "manifest.json").write_text(json_text(manifest), encoding="utf-8")
     (output / "summary.json").write_text(json_text(summary), encoding="utf-8")
     (output / "report.md").write_text(report(summary), encoding="utf-8")
+    if interrupted:
+        raise asyncio.CancelledError
     return summary
 
 
@@ -238,6 +280,7 @@ def summarize(results: list[dict[str, Any]], manifest: dict[str, Any]) -> dict[s
         "experiment_run_id": manifest["experiment_run_id"],
         "execution_mode": manifest["execution_mode"],
         "workload_origin": manifest["workload_origin"],
+        "interrupted": manifest.get("interrupted", False),
         "selected": len(results),
         "sent": len(sent),
         "counts": counts,

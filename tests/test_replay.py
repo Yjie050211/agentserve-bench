@@ -63,3 +63,35 @@ async def test_backend_exception_still_writes_complete_results(tmp_path, excepti
     assert summary["counts"]["not_sent"] == 1
     assert summary["cache_comparison_eligible"] is False
     assert len((output / "results.jsonl").read_text().splitlines()) == 2
+
+
+async def test_external_cancel_keeps_active_and_waiting_sessions(tmp_path):
+    trace = load_trace(generate(tmp_path / "trace", sessions=3, steps=2))
+    started = asyncio.Event()
+
+    class SignallingBackend(FixtureBackend):
+        async def send(self, body, request_id):
+            started.set()
+            return await super().send(body, request_id)
+
+    backend = SignallingBackend(delay_s=10)
+    output = tmp_path / "run"
+    task = asyncio.create_task(replay(trace, backend, output, concurrency=1))
+    # Wait for the actual send, not a scheduler timing assumption.
+    async with asyncio.timeout(1):
+        await started.wait()
+    task.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await task
+    results = [json.loads(line) for line in (output / "results.jsonl").read_text().splitlines()]
+    summary = json.loads((output / "summary.json").read_text())
+    manifest = json.loads((output / "manifest.json").read_text())
+    assert len(results) == 6
+    assert summary["counts"] == {"cancelled": 1, "not_sent": 5}
+    assert summary["interrupted"] is True
+    assert manifest["run_status"] == "cancelled"
+    assert backend.active == 0
+    assert (output / "report.md").exists()
+    from agentserve_bench.replay.runner import summarize
+
+    assert summarize(results, manifest) == summary
